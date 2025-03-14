@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layout/default :: layout(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${post.title}">게시글 제목</title>
+</head>
+<body>
+    <section>
+        <div class="container">
+            <div class="post-header">
+                <h2 th:text="${post.title}">게시글 제목</h2>
+                <div class="post-meta">
+                    <span th:text="${post.author}">작성자</span> | 
+                    <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                </div>
+                <div class="post-actions">
+                    <a th:href="@{/view/{id}/edit(id=${post.id})}" class="btn">수정</a>
+                    <form th:action="@{/view/{id}/delete(id=${post.id})}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('정말 삭제하시겠습니까?')">삭제</button>
+                    </form>
+                    <a th:href="@{/view}" class="btn">목록으로</a>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <div th:if="${post.imageUrl}" class="post-image">
+                    <img th:src="${post.imageUrl}" alt="게시글 이미지">
+                </div>
+                <p th:text="${post.content}">게시글 내용</p>
+            </div>
+            
+            <div class="upload-form">
+                <h3>이미지 업로드</h3>
+                <form th:action="@{/view/{id}/upload(id=${post.id})}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <input type="file" name="image" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="btn">업로드</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

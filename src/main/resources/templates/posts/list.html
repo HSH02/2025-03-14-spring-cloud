@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{layout/default :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>게시글 목록</title>
+</head>
+<body>
+    <section>
+        <div class="container">
+            <div class="page-header">
+                <h2>게시글 목록</h2>
+                <a th:href="@{/view/create}" class="btn btn-primary">새 게시글 작성</a>
+            </div>
+            
+            <div class="post-list">
+                <div th:if="${posts.empty}" class="empty-list">
+                    <p>게시글이 없습니다. 첫 번째 게시글을 작성해보세요!</p>
+                </div>
+                
+                <div th:each="post : ${posts}" class="post-item">
+                    <h3><a th:href="@{/view/{id}(id=${post.id})}" th:text="${post.title}">게시글 제목</a></h3>
+                    <div class="post-meta">
+                        <span th:text="${post.author}">작성자</span> | 
+                        <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

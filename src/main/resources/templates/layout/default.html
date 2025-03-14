@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="${title}">게시판</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <h1><a th:href="@{/view}">간단한 게시판</a></h1>
+    </header>
+    
+    <main th:replace="${content}">
+        <!-- 컨텐츠 영역 -->
+    </main>
+    
+    <footer>
+        <p>© 2025 간단한 AWS S3 활용 게시판</p>
+    </footer>
+</body>
+</html> 

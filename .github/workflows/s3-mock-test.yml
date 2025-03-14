@@ -1,0 +1,86 @@
+name: S3 모의 테스트
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  s3-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      # LocalStack을 사용해 S3 환경 모의
+      localstack:
+        image: localstack/localstack
+        env:
+          SERVICES: s3
+          DEFAULT_REGION: ap-northeast-2
+        ports:
+          - 4566:4566
+          
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: JDK 21 설정
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+      
+      - name: LocalStack S3 버킷 생성
+        run: |
+          # AWS CLI 설치
+          pip install awscli-local
+          
+          # LocalStack에 S3 버킷 생성
+          awslocal s3 mb s3://dev-webapp-images-e5cd16312460923b
+          
+          # LocalStack 작동 확인
+          awslocal s3 ls
+      
+      - name: 테스트 프로필로 애플리케이션 실행
+        run: |
+          # application-test.properties 파일 생성
+          cat > src/main/resources/application-test.properties << EOF
+          spring.datasource.url=jdbc:h2:mem:testdb
+          spring.datasource.driverClassName=org.h2.Driver
+          spring.datasource.username=sa
+          spring.datasource.password=
+          spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+          
+          aws.region=ap-northeast-2
+          aws.s3.name=dev-webapp-images-e5cd16312460923b
+          
+          # LocalStack S3 엔드포인트 설정
+          aws.s3.endpoint=http://localhost:4566
+          
+          spring.thymeleaf.cache=false
+          EOF
+          
+          # 테스트 프로필로 애플리케이션 빌드 및 실행
+          ./gradlew build -x test
+          
+          nohup java -jar -Dspring.profiles.active=test build/libs/*.jar &
+          echo "애플리케이션 시작 중..."
+          sleep 30
+      
+      - name: S3 기능 테스트
+        run: |
+          # 이미지 파일 생성
+          echo "테스트 이미지" > test.jpg
+          
+          # 이미지 업로드 테스트
+          curl -s -X POST -F "image=@test.jpg" http://localhost:8080/api/posts/image-upload-test
+          
+          # S3 버킷에 파일이 업로드되었는지 확인
+          uploaded_files=$(awslocal s3 ls s3://dev-webapp-images-e5cd16312460923b/images/ | wc -l)
+          
+          if [ $uploaded_files -gt 0 ]; then
+            echo "✅ S3 이미지 업로드 테스트: 성공"
+          else
+            echo "❌ S3 이미지 업로드 테스트: 실패"
+            exit 1
+          fi 
